@@ -1,0 +1,24 @@
+<?xml version="1.0"?>
+<info xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:noNamespaceSchemaLocation="https://apps.nextcloud.com/schema/apps/info.xsd">
+	<id>custom_public_share</id>
+	<name>Custom Public Share Domain</name>
+	<summary>Replace the domain in public share links with a custom domain</summary>
+	<description><![CDATA[
+This app lets an admin configure a custom domain that will be substituted into
+all public share links shown in the UI. Useful when Nextcloud runs on an
+internal domain that is not reachable from the internet, and an external
+reverse proxy serves public shares on a different domain.
+	]]></description>
+	<version>1.0.0</version>
+	<licence>agpl</licence>
+	<author>Lucas</author>
+	<namespace>CustomPublicShare</namespace>
+	<category>files</category>
+	<dependencies>
+		<nextcloud min-version="30" max-version="33"/>
+	</dependencies>
+	<settings>
+		<admin>OCA\CustomPublicShare\Settings\Admin</admin>
+	</settings>
+</info>

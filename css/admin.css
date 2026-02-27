@@ -1,0 +1,31 @@
+#custom-public-share-settings .settings-hint {
+	color: var(--color-text-maxcontrast);
+	margin-bottom: 12px;
+}
+
+#custom-public-share-form {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	flex-wrap: wrap;
+}
+
+#custom-public-share-form label {
+	font-weight: bold;
+}
+
+#custom-public-share-domain {
+	width: 320px;
+}
+
+#custom-public-share-msg {
+	font-size: 0.9em;
+}
+
+#custom-public-share-msg.success {
+	color: var(--color-success);
+}
+
+#custom-public-share-msg.error {
+	color: var(--color-error);
+}
