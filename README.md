@@ -2,6 +2,12 @@
 
 A Nextcloud app that rewrites public share URLs to use a custom domain. Useful when Nextcloud runs on an internal domain that is unreachable from the internet: the app substitutes a configured external domain into every share link shown in the UI and into share notification emails, without touching Nextcloud's database or server-side URL generation.
 
+## Disclaimer about AI usage
+
+This project was entirely "vibe-coded" using an AI model. As I'm not a PHP developer or have experience with Nexcloud plugin development, I choose AI as the tool to sove the problema I had rapidly. That said, I cannot recommend using this solution in an enterprise deployment, because I cannot properly review the security and stability of the plugin, but I'm 100% open for contributions from the community.
+
+How the LLM models was prompted is documented in the `AI_USAGE.md` file.
+
 ## Problem
 
 Nextcloud builds public share links using the server's own base URL (e.g. `https://files.internal.example.com`). When that domain is not reachable from the internet, links copied by users or sent in share-by-email notifications are broken for external recipients. This app transparently replaces the internal domain with an internet-facing one at the point where links are presented to the user or included in emails.
@@ -73,12 +79,31 @@ custom_public_share/
 
 ## Installation
 
+### Direct access to the Nextcloud server
 ```bash
-# Place the app in Nextcloud's apps directory
-ln -s /path/to/custom_public_share /path/to/nextcloud/apps/custom_public_share
+# clone this repo
+git clone https://git.lucashmsilva.com/lucashmsilva/custom_public_share.git
 
-# Enable the app
+# Place the app in Nextcloud's apps directory
+ln -s $(pwd)/custom_public_share /path/to/nextcloud/custom_apps/custom_public_share
+```
+
+### Copying the plugin via SSH to a remote server
+```bash
+# clone this repo
+git clone https://git.lucashmsilva.com/lucashmsilva/custom_public_share.git
+
+# Run the provided script
+./remote-install.sh user@nextcloud-host /path/to/nextcloud/custom_apps/
+```
+
+### Enabling the app
+```bash
+# direct install in the host
 sudo -u www-data php occ app:enable custom_public_share
+
+# docker install
+docker compose exec nextcloud-service-name php occ app:enable custom_public_share
 ```
 
 ## Configuration
@@ -90,7 +115,42 @@ sudo -u www-data php occ app:enable custom_public_share
 
 To revert to default behaviour, clear the field and save.
 
-The external domain must point to a reverse proxy that forwards `/s/{TOKEN}` requests to the internal Nextcloud server. Configuring that proxy is outside the scope of this app.
+The external domain must point to a reverse proxy that forwards `/s/{TOKEN}` requests to the internal Nextcloud server.
+
+## Example rever-proxy setup
+
+Although beyond the scope of this project, here is an exemple of a Caddy configuration that forwards requests from a internet-facing domain to an internal Nextcloud server, limiting the proxy to routes used in an public share access and avoiding exposing all Nextcloud endpoints to the internet:
+
+```Caddyfile
+ @nextcloud_share host nc-share.example.com
+  handle @nextcloud_share {
+    @share_paths {
+      path /s*
+      path /public.php*
+      path /js*
+      path /*.css
+      path /*.png
+      path /*.svg
+      path /*.js
+      path /*.mjs
+      path /apps*
+      path /core*
+      path /dist*
+      path /custom_apps*
+      path /avatar*
+    }
+
+    reverse_proxy @share_paths https://nextcloud.internal.example.com {
+      header_up Host {http.reverse_proxy.upstream.hostport}
+    }
+  }
+```
+
+This assumes that the Caddy server is internet facing and is also connected to the same network as the internal Nextcloud server (using a VPN for example).
+
+Is important to point out that this proxy solution is not complete. For example: sharing richdocument files (.xlsx, .docx, etc), even with editing permission, will not work, because of the underling configuration of the Collabora editing server. If you have any ideias setting this up with the Collabora server, feel free to reach out.
+
+I'm myself still exploring and adapting this configuration.
 
 ## Building from Source
 

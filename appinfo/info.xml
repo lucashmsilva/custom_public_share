@@ -10,11 +10,13 @@ all public share links shown in the UI. Useful when Nextcloud runs on an
 internal domain that is not reachable from the internet, and an external
 reverse proxy serves public shares on a different domain.
 	]]></description>
-	<version>1.0.0</version>
+	<version>1.1.0</version>
 	<licence>agpl</licence>
-	<author>Lucas</author>
+	<author>lucashmsilva</author>
 	<namespace>CustomPublicShare</namespace>
 	<category>files</category>
+	<bugs>https://github.com/lucashmsilva/custom_public_share/issues</bugs>
+	<repository>https://github.com/lucashmsilva/custom_public_share</repository>
 	<dependencies>
 		<nextcloud min-version="30" max-version="33"/>
 	</dependencies>
