@@ -117,7 +117,7 @@ To revert to default behaviour, clear the field and save.
 
 The external domain must point to a reverse proxy that forwards `/s/{TOKEN}` requests to the internal Nextcloud server.
 
-## Example rever-proxy setup
+## Example reverse-proxy setup
 
 Although beyond the scope of this project, here is an exemple of a Caddy configuration that forwards requests from a internet-facing domain to an internal Nextcloud server, limiting the proxy to routes used in an public share access and avoiding exposing all Nextcloud endpoints to the internet:
 
@@ -146,9 +146,9 @@ Although beyond the scope of this project, here is an exemple of a Caddy configu
   }
 ```
 
-This assumes that the Caddy server is internet facing and is also connected to the same network as the internal Nextcloud server (using a VPN for example).
+This assumes that the Caddy server is internet facing and is also connected to the same network as the internal Nextcloud server (using a VPN for example) and that `nc-share.example.com` the configured URL for public shares at the admin panel.
 
-Is important to point out that this proxy solution is not complete. For example: sharing richdocument files (.xlsx, .docx, etc), even with editing permission, will not work, because of the underling configuration of the Collabora editing server. If you have any ideias setting this up with the Collabora server, feel free to reach out.
+It's important to point out that this proxy solution is not complete. For example: sharing richdocument files (.xlsx, .docx, etc), even with editing permission, will not work because the configuration of the Collabora editing server needs to be adapted too. If you have any ideias of setting this up with the Collabora server, feel free to reach out.
 
 I'm myself still exploring and adapting this configuration.
 
