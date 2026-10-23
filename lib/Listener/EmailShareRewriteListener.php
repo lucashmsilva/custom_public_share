@@ -31,7 +31,7 @@ class EmailShareRewriteListener implements IEventListener {
 
 		$message = $event->getMessage();
 
-		// Access the underlying Symfony Email object via the NC30+ public accessor.
+		// Nextcloud 35 still exposes body getters only on its internal mail object.
 		// IMessage does not expose body getters, so we duck-type through the concrete class.
 		if (!method_exists($message, 'getSymfonyEmail')) {
 			return;
@@ -41,7 +41,7 @@ class EmailShareRewriteListener implements IEventListener {
 		$baseUrl = rtrim($this->urlGenerator->getBaseUrl(), '/');
 
 		$html = $symfonyEmail->getHtmlBody();
-		if ($html !== null && $html !== '') {
+		if (is_string($html) && $html !== '') {
 			$rewritten = $this->rewriteUrls($html, $baseUrl, $customDomain);
 			if ($rewritten !== $html) {
 				$symfonyEmail->html($rewritten);
@@ -49,7 +49,7 @@ class EmailShareRewriteListener implements IEventListener {
 		}
 
 		$text = $symfonyEmail->getTextBody();
-		if ($text !== null && $text !== '') {
+		if (is_string($text) && $text !== '') {
 			$rewritten = $this->rewriteUrls($text, $baseUrl, $customDomain);
 			if ($rewritten !== $text) {
 				$symfonyEmail->text($rewritten);
@@ -60,6 +60,6 @@ class EmailShareRewriteListener implements IEventListener {
 	private function rewriteUrls(string $body, string $baseUrl, string $customDomain): string {
 		$quotedBase = preg_quote($baseUrl, '/');
 		$pattern = '/' . $quotedBase . '(\/index\.php)?\/s\/([A-Za-z0-9]+)/';
-		return preg_replace($pattern, $customDomain . '/s/$2', $body) ?? $body;
+		return preg_replace_callback($pattern, static fn (array $match): string => rtrim($customDomain, '/') . '/s/' . $match[2], $body) ?? $body;
 	}
 }

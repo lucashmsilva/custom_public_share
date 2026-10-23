@@ -13,7 +13,8 @@ import { getBaseUrl } from '@nextcloud/router'
 		return
 	}
 
-	const baseUrl = getBaseUrl()
+	customDomain = customDomain.replace(/\/+$/, '')
+	const baseUrl = getBaseUrl().replace(/\/+$/, '')
 
 	// Match share URLs: baseUrl + optional /index.php + /s/ + token
 	// Captures everything up to and including /s/TOKEN
@@ -24,7 +25,7 @@ import { getBaseUrl } from '@nextcloud/router'
 	)
 
 	function rewriteUrl(text) {
-		return text.replace(sharePattern, (match, indexPhp, token) => {
+		return typeof text !== 'string' ? text : text.replace(sharePattern, (match, indexPhp, token) => {
 			return customDomain + '/s/' + token
 		})
 	}
@@ -32,8 +33,12 @@ import { getBaseUrl } from '@nextcloud/router'
 	// Strategy 1: Override navigator.clipboard.writeText
 	if (navigator.clipboard && typeof navigator.clipboard.writeText === 'function') {
 		const originalWriteText = navigator.clipboard.writeText.bind(navigator.clipboard)
-		navigator.clipboard.writeText = function(text) {
-			return originalWriteText(rewriteUrl(text))
+		try {
+			navigator.clipboard.writeText = function(text) {
+				return originalWriteText(rewriteUrl(text))
+			}
+		} catch {
+			// Some browsers make this method read-only; keep the DOM and prompt hooks.
 		}
 	}
 
@@ -57,11 +62,11 @@ import { getBaseUrl } from '@nextcloud/router'
 				rewriteElement(node)
 			}
 
-			// Handle attribute changes on input elements
-			if (mutation.type === 'attributes'
-				&& mutation.target.tagName === 'INPUT'
-				&& mutation.attributeName === 'value') {
-				rewriteInput(mutation.target)
+			if (mutation.type === 'attributes') {
+				rewriteElement(mutation.target)
+			} else if (mutation.type === 'characterData') {
+				const link = mutation.target.parentElement?.closest('a[href]')
+				if (link) rewriteLink(link)
 			}
 		}
 	})
@@ -85,34 +90,37 @@ import { getBaseUrl } from '@nextcloud/router'
 			rewriteInput(el)
 		}
 
-		// Rewrite links
-		const links = el.querySelectorAll('a[href]')
-		links.forEach((link) => {
-			if (matchesShareUrl(link.href)) {
-				link.href = rewriteUrl(link.href)
-			}
-			if (link.textContent && matchesShareUrl(link.textContent)) {
-				link.textContent = rewriteUrl(link.textContent)
-			}
-		})
+		// Include a newly inserted anchor itself, not only its descendants.
+		if (el.matches('a[href]')) rewriteLink(el)
+		el.querySelectorAll('a[href]').forEach(rewriteLink)
 	}
 
-	// Start observing once the DOM is ready
-	if (document.body) {
+	function rewriteLink(link) {
+		const href = rewriteUrl(link.href)
+		if (href !== link.href) link.href = href
+		// Preserve Vue-owned child elements (icons and event handlers).
+		const walker = document.createTreeWalker(link, NodeFilter.SHOW_TEXT)
+		while (walker.nextNode()) {
+			const node = walker.currentNode
+			const value = rewriteUrl(node.nodeValue)
+			if (value !== node.nodeValue) node.nodeValue = value
+		}
+	}
+
+	function start() {
+		rewriteElement(document.body)
 		observer.observe(document.body, {
 			childList: true,
 			subtree: true,
 			attributes: true,
-			attributeFilter: ['value'],
+			characterData: true,
+			attributeFilter: ['value', 'href'],
 		})
+	}
+
+	if (document.body) {
+		start()
 	} else {
-		document.addEventListener('DOMContentLoaded', () => {
-			observer.observe(document.body, {
-				childList: true,
-				subtree: true,
-				attributes: true,
-				attributeFilter: ['value'],
-			})
-		})
+		document.addEventListener('DOMContentLoaded', start, { once: true })
 	}
 })()

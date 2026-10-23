@@ -16,8 +16,8 @@ jobs:
     name: "Release: build, sign and upload the app"
     strategy:
       matrix:
-        php-versions: ['8.3.30']
-        nextcloud: ['stable32']
+        php-versions: ['8.3']
+        nextcloud: ['v35.0.2']
         database: ['sqlite']
     steps:
       - name: Checkout
@@ -37,8 +37,19 @@ jobs:
           version: ${{ matrix.nextcloud }}
           database-type: ${{ matrix.database }}
 
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+
       - name: Prime app build
         run: make
+
+      - name: Regression checks
+        run: |
+          npm test
+          php tests/backend.php
 
       - name: Configure server with app
         uses: SMillerDev/nextcloud-actions/setup-nextcloud-app@fae87e29aa7cdf1ea0b8033c67f60e75b10be2cd

@@ -38,6 +38,11 @@ class SettingsController extends Controller {
 				return new JSONResponse(['error' => 'URL must use http or https scheme.'], 400);
 			}
 
+			$parts = parse_url($custom_domain);
+			if (isset($parts['user']) || isset($parts['pass']) || isset($parts['query']) || isset($parts['fragment'])) {
+				return new JSONResponse(['error' => 'Use a base URL without credentials, a query string, or a fragment.'], 400);
+			}
+
 			// Strip trailing slash
 			$custom_domain = rtrim($custom_domain, '/');
 		}

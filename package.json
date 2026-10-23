@@ -1,10 +1,11 @@
 {
 	"name": "custom_public_share",
-	"version": "1.1.0",
+	"version": "1.2.0",
 	"private": true,
 	"scripts": {
 		"build": "webpack --mode production",
-		"dev": "webpack --mode development --watch"
+		"dev": "webpack --mode development --watch",
+		"test": "node --test tests/*.test.cjs"
 	},
 	"dependencies": {
 		"@nextcloud/axios": "^2.5.0",
@@ -12,6 +13,7 @@
 		"@nextcloud/router": "^3.0.1"
 	},
 	"devDependencies": {
+		"jsdom": "^26.1.0",
 		"webpack": "^5.94.0",
 		"webpack-cli": "^6.0.1"
 	}
